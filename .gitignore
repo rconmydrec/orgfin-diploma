@@ -50,16 +50,5 @@ backend/backup/
 web/node_modules/
 web/dist/
 
-# Deployment config
-.deploy.env
-
-# Deployment secrets (env files with real credentials)
-deploy/kubernetes/backend/overlays/prod/.env.prod
-deploy/kubernetes/backend/overlays/staging/.env.staging
-deploy/kubernetes/backend/overlays/dev/.env.dev
-
-# Claude Code local settings
-.claude/settings.local.json
-
 # Build artifacts
 backend/migrate
