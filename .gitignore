@@ -1,0 +1,65 @@
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+main
+
+# Test binary
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Dependency directories
+vendor/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Environment files
+.env
+backend/.env
+!backend/.env.test
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+build-errors.log
+
+# Backend build artifacts
+backend/bin/
+backend/tmp/
+bin/
+tmp/
+
+# Database backups
+backup/
+backend/backup/
+!backend/internal/services/backup/
+
+# Web frontend
+web/node_modules/
+web/dist/
+
+# Deployment config
+.deploy.env
+
+# Deployment secrets (env files with real credentials)
+deploy/kubernetes/backend/overlays/prod/.env.prod
+deploy/kubernetes/backend/overlays/staging/.env.staging
+deploy/kubernetes/backend/overlays/dev/.env.dev
+
+# Claude Code local settings
+.claude/settings.local.json
+
+# Build artifacts
+backend/migrate

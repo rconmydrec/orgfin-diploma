@@ -1,0 +1,735 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>financial_planning: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/go-budget/backend/internal/handlers/financial_planning/handler.go (94.0%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package financial_planning
+
+import (
+        "database/sql"
+        "errors"
+        "fmt"
+        "log/slog"
+        "net/http"
+        "time"
+
+        "github.com/labstack/echo/v4"
+        "github.com/shopspring/decimal"
+        "github.com/go-budget/backend/internal/repositories"
+)
+
+// errUserNotActive is a sentinel error returned by checkUserActive when the
+// user is not active. The HTTP response has already been written at that point.
+var errUserNotActive = errors.New("user not active")
+
+// errNoExchangeRates is a sentinel error indicating the exchange_rates table is empty.
+var errNoExchangeRates = errors.New("exchange rates table is empty")
+
+// checkUserActive verifies that the user exists, is active, and is not soft-deleted.
+// Returns errUserNotActive (after writing a 401 JSON response) when the user
+// cannot be found, is deactivated, or is deleted. Returns nil when the user is active.
+func (h *Handler) checkUserActive(c echo.Context, userID int) error <span class="cov8" title="1">{
+        user, err := h.userRepo.GetByID(userID)
+        if err != nil </span><span class="cov8" title="1">{
+                h.logger.Error("failed to get user", "error", err)
+                _ = c.JSON(http.StatusUnauthorized, ErrorResponse{Detail: "User not activated"})
+                return errUserNotActive
+        }</span>
+        <span class="cov8" title="1">if !user.IsActive || user.IsDeleted </span><span class="cov8" title="1">{
+                _ = c.JSON(http.StatusUnauthorized, ErrorResponse{Detail: "User not activated"})
+                return errUserNotActive
+        }</span>
+        <span class="cov8" title="1">return nil</span>
+}
+
+type Handler struct {
+        plannedTxRepo    repositories.PlannedTransactionRepository
+        accountRepo      repositories.AccountRepository
+        currencyRepo     repositories.CurrencyRepository
+        exchangeRateRepo repositories.ExchangeRateRepository
+        userRepo         repositories.UserRepository
+        logger           *slog.Logger
+}
+
+func New(
+        plannedTxRepo repositories.PlannedTransactionRepository,
+        accountRepo repositories.AccountRepository,
+        currencyRepo repositories.CurrencyRepository,
+        exchangeRateRepo repositories.ExchangeRateRepository,
+        userRepo repositories.UserRepository,
+        logger *slog.Logger,
+) *Handler <span class="cov8" title="1">{
+        return &amp;Handler{
+                plannedTxRepo:    plannedTxRepo,
+                accountRepo:      accountRepo,
+                currencyRepo:     currencyRepo,
+                exchangeRateRepo: exchangeRateRepo,
+                userRepo:         userRepo,
+                logger:           logger,
+        }
+}</span>
+
+func (h *Handler) RegisterRoutes(g *echo.Group) <span class="cov8" title="1">{
+        g.POST("/future-balance", h.CalculateFutureBalance)
+        g.POST("/projection", h.GetBalanceProjection)
+}</span>
+
+// rateCache caches exchange rate lookups per date within a single request.
+type rateCache struct {
+        cache map[string]*repositories.ExchangeRateListResponse
+        repo  repositories.ExchangeRateRepository
+}
+
+func newRateCache(repo repositories.ExchangeRateRepository) *rateCache <span class="cov8" title="1">{
+        return &amp;rateCache{
+                cache: make(map[string]*repositories.ExchangeRateListResponse),
+                repo:  repo,
+        }
+}</span>
+
+func (rc *rateCache) getRatesForDate(dateStr string) (*repositories.ExchangeRateListResponse, error) <span class="cov8" title="1">{
+        if cached, ok := rc.cache[dateStr]; ok </span><span class="cov8" title="1">{
+                return cached, nil
+        }</span>
+        <span class="cov8" title="1">rates, err := rc.repo.GetAllRatesForDate(dateStr)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">rc.cache[dateStr] = rates
+        return rates, nil</span>
+}
+
+// convertToBaseCurrency converts an amount from sourceCurrencyCode to baseCurrencyCode
+// using exchange rates for the given date.
+//
+// Error semantics:
+//   - Returns errNoExchangeRates when the exchange_rates table is completely empty (sql.ErrNoRows).
+//   - Returns a non-nil error when a specific currency code is missing from the rates map.
+//   - Returns nil error on successful conversion.
+func (h *Handler) convertToBaseCurrency(
+        amount decimal.Decimal,
+        sourceCurrencyCode, baseCurrencyCode string,
+        dateStr string,
+        rc *rateCache,
+) (decimal.Decimal, error) <span class="cov8" title="1">{
+        if sourceCurrencyCode == baseCurrencyCode </span><span class="cov8" title="1">{
+                return amount, nil
+        }</span>
+
+        <span class="cov8" title="1">rates, err := rc.getRatesForDate(dateStr)
+        if err != nil </span><span class="cov8" title="1">{
+                if errors.Is(err, sql.ErrNoRows) </span><span class="cov8" title="1">{
+                        return decimal.Zero, errNoExchangeRates
+                }</span>
+                <span class="cov8" title="1">h.logger.Warn("exchange rates unavailable",
+                        "date", dateStr,
+                        "source", sourceCurrencyCode,
+                        "target", baseCurrencyCode,
+                        "error", err,
+                )
+                return decimal.Zero, fmt.Errorf("exchange rates unavailable for %s: %w", dateStr, err)</span>
+        }
+
+        <span class="cov8" title="1">if rates == nil || len(rates.Rates) == 0 </span><span class="cov8" title="1">{
+                return decimal.Zero, errNoExchangeRates
+        }</span>
+
+        <span class="cov8" title="1">sourceRate, sourceOK := rates.Rates[sourceCurrencyCode]
+        targetRate, targetOK := rates.Rates[baseCurrencyCode]
+
+        if !sourceOK || !targetOK || sourceRate == 0 || targetRate == 0 </span><span class="cov8" title="1">{
+                h.logger.Warn("exchange rate not found for currency pair",
+                        "date", dateStr,
+                        "source", sourceCurrencyCode,
+                        "target", baseCurrencyCode,
+                        "source_rate_found", sourceOK,
+                        "target_rate_found", targetOK,
+                )
+                return decimal.Zero, fmt.Errorf("currency rate missing: source=%s(%v) target=%s(%v)",
+                        sourceCurrencyCode, sourceOK, baseCurrencyCode, targetOK)
+        }</span>
+
+        // converted = amount / sourceRate * targetRate
+        <span class="cov8" title="1">sourceRateDec := decimal.NewFromFloat(sourceRate)
+        targetRateDec := decimal.NewFromFloat(targetRate)
+        return amount.Div(sourceRateDec).Mul(targetRateDec), nil</span>
+}
+
+// DTOs
+type FutureBalanceRequest struct {
+        TargetDate      time.Time `json:"targetDate" validate:"required"`
+        AccountIDs      []int     `json:"accountIds"`
+        IncludeInactive bool      `json:"includeInactive"`
+}
+
+type AccountBalanceProjection struct {
+        AccountID            int             `json:"accountId"`
+        AccountName          string          `json:"accountName"`
+        CurrencyCode         string          `json:"currencyCode"`
+        CurrentBalance       decimal.Decimal `json:"currentBalance"`
+        ProjectedBalance     decimal.Decimal `json:"projectedBalance"`
+        TotalPlannedIncome   decimal.Decimal `json:"totalPlannedIncome"`
+        TotalPlannedExpenses decimal.Decimal `json:"totalPlannedExpenses"`
+}
+
+type FutureBalanceResponse struct {
+        TargetDate            time.Time                  `json:"targetDate"`
+        BaseCurrencyCode      string                     `json:"baseCurrencyCode"`
+        TotalCurrentBalance   decimal.Decimal            `json:"totalCurrentBalance"`
+        TotalProjectedBalance decimal.Decimal            `json:"totalProjectedBalance"`
+        TotalPlannedIncome    decimal.Decimal            `json:"totalPlannedIncome"`
+        TotalPlannedExpenses  decimal.Decimal            `json:"totalPlannedExpenses"`
+        IncomeCount           int                        `json:"incomeCount"`
+        ExpensesCount         int                        `json:"expensesCount"`
+        Accounts              []AccountBalanceProjection `json:"accounts"`
+}
+
+type BalanceProjectionRequest struct {
+        StartDate       time.Time `json:"startDate"`
+        EndDate         time.Time `json:"endDate" validate:"required"`
+        Period          string    `json:"period"` // daily, weekly, monthly
+        AccountIDs      []int     `json:"accountIds"`
+        IncludeInactive bool      `json:"includeInactive"`
+}
+
+type BalanceProjectionPoint struct {
+        Date     time.Time       `json:"date"`
+        Balance  decimal.Decimal `json:"balance"`
+        Income   decimal.Decimal `json:"income"`
+        Expenses decimal.Decimal `json:"expenses"`
+}
+
+type BalanceProjectionResponse struct {
+        StartDate        time.Time                `json:"startDate"`
+        EndDate          time.Time                `json:"endDate"`
+        Period           string                   `json:"period"`
+        BaseCurrencyCode string                   `json:"baseCurrencyCode"`
+        ProjectionPoints []BalanceProjectionPoint `json:"projectionPoints"`
+}
+
+type ErrorResponse struct {
+        Detail string `json:"detail"`
+}
+
+func (h *Handler) CalculateFutureBalance(c echo.Context) error <span class="cov8" title="1">{
+        userID := c.Get("user_id").(int)
+        if err := h.checkUserActive(c, userID); err != nil </span><span class="cov8" title="1">{
+                return nil
+        }</span>
+
+        <span class="cov8" title="1">var req FutureBalanceRequest
+        if err := c.Bind(&amp;req); err != nil </span><span class="cov8" title="1">{
+                return c.JSON(http.StatusUnprocessableEntity, ErrorResponse{Detail: "Invalid request data"})
+        }</span>
+        <span class="cov8" title="1">if err := c.Validate(&amp;req); err != nil </span><span class="cov8" title="1">{
+                return c.JSON(http.StatusUnprocessableEntity, ErrorResponse{Detail: "Invalid request data"})
+        }</span>
+
+        <span class="cov8" title="1">h.logger.Info("Calculating future balance",
+                "user_id", userID,
+                "target_date", req.TargetDate,
+                "account_ids", req.AccountIDs,
+        )
+
+        // Get user's base currency
+        user, err := h.userRepo.GetByID(userID)
+        if err != nil </span><span class="cov8" title="1">{
+                h.logger.Error("failed to get user settings", "error", err)
+                return c.JSON(http.StatusInternalServerError, ErrorResponse{Detail: "Error calculating future balance"})
+        }</span>
+
+        <span class="cov8" title="1">baseCurrency, err := h.currencyRepo.GetByID(user.BaseCurrencyID)
+        if err != nil </span><span class="cov8" title="1">{
+                h.logger.Error("failed to get base currency", "error", err)
+                return c.JSON(http.StatusInternalServerError, ErrorResponse{Detail: "Error calculating future balance"})
+        }</span>
+
+        // Get user accounts
+        <span class="cov8" title="1">accountFilters := repositories.AccountFilters{
+                IncludeHidden:   true,
+                IncludeArchived: false,
+        }
+        accounts, err := h.accountRepo.GetByUserID(userID, accountFilters)
+        if err != nil </span><span class="cov8" title="1">{
+                h.logger.Error("failed to get accounts", "error", err)
+                return c.JSON(http.StatusInternalServerError, ErrorResponse{Detail: "Error calculating future balance"})
+        }</span>
+
+        // Filter by account IDs if provided
+        <span class="cov8" title="1">accountIDSet := make(map[int]bool)
+        for _, id := range req.AccountIDs </span><span class="cov8" title="1">{
+                accountIDSet[id] = true
+        }</span>
+
+        // Calculate days until target date
+        <span class="cov8" title="1">days := int(time.Until(req.TargetDate).Hours() / 24)
+        if days &lt; 0 </span><span class="cov8" title="1">{
+                days = 0
+        }</span>
+
+        // Get upcoming planned transactions
+        <span class="cov8" title="1">plannedTxs, err := h.plannedTxRepo.GetUpcomingOccurrences(userID, days, req.IncludeInactive)
+        if err != nil </span><span class="cov8" title="1">{
+                h.logger.Error("failed to get planned transactions", "error", err)
+                return c.JSON(http.StatusInternalServerError, ErrorResponse{Detail: "Error calculating future balance"})
+        }</span>
+
+        // Initialize exchange rate cache for currency conversion
+        <span class="cov8" title="1">rc := newRateCache(h.exchangeRateRepo)
+
+        // Aggregate global totals from all planned transactions, converting to base currency
+        globalPlannedIncome := decimal.Zero
+        globalPlannedExpenses := decimal.Zero
+        incomeCount := 0
+        expensesCount := 0
+
+        for _, ptx := range plannedTxs </span><span class="cov8" title="1">{
+                // Look up the currency for this planned transaction
+                ptxCurrency, currErr := h.currencyRepo.GetByID(ptx.CurrencyID)
+                if currErr != nil </span><span class="cov8" title="1">{
+                        h.logger.Warn("failed to get currency for planned tx, skipping",
+                                "currency_id", ptx.CurrencyID, "error", currErr)
+                        continue</span>
+                }
+
+                // Convert to base currency using the occurrence date
+                <span class="cov8" title="1">dateStr := ptx.OccurrenceDate.Format("2006-01-02")
+                convertedAmount, convErr := h.convertToBaseCurrency(
+                        ptx.Amount, ptxCurrency.Code, baseCurrency.Code, dateStr, rc,
+                )
+                if convErr != nil </span><span class="cov8" title="1">{
+                        if errors.Is(convErr, errNoExchangeRates) </span><span class="cov8" title="1">{
+                                h.logger.Error("exchange rates table is empty, cannot calculate future balance")
+                                return c.JSON(http.StatusInternalServerError, ErrorResponse{Detail: "Exchange rates unavailable"})
+                        }</span>
+                        <span class="cov0" title="0">h.logger.Warn("skipping planned tx due to missing exchange rate",
+                                "planned_tx_id", ptx.PlannedTransactionID, "error", convErr)
+                        continue</span>
+                }
+
+                <span class="cov8" title="1">if ptx.IsIncome </span><span class="cov8" title="1">{
+                        globalPlannedIncome = globalPlannedIncome.Add(convertedAmount)
+                        incomeCount++
+                }</span> else<span class="cov8" title="1"> {
+                        globalPlannedExpenses = globalPlannedExpenses.Add(convertedAmount)
+                        expensesCount++
+                }</span>
+        }
+
+        // Build account projections, converting balances to base currency for the total
+        <span class="cov8" title="1">totalCurrentBalance := decimal.Zero
+        todayStr := time.Now().Format("2006-01-02")
+
+        var accountProjections []AccountBalanceProjection
+
+        for _, account := range accounts </span><span class="cov8" title="1">{
+                if len(req.AccountIDs) &gt; 0 &amp;&amp; !accountIDSet[account.ID] </span><span class="cov8" title="1">{
+                        continue</span>
+                }
+
+                <span class="cov8" title="1">currency, currErr := h.currencyRepo.GetByID(account.CurrencyID)
+                if currErr != nil </span><span class="cov8" title="1">{
+                        continue</span>
+                }
+
+                // Per-account projections show the account's own currency balance (not converted)
+                <span class="cov8" title="1">accountProjections = append(accountProjections, AccountBalanceProjection{
+                        AccountID:            account.ID,
+                        AccountName:          account.Name,
+                        CurrencyCode:         currency.Code,
+                        CurrentBalance:       account.Balance,
+                        ProjectedBalance:     account.Balance,
+                        TotalPlannedIncome:   decimal.Zero,
+                        TotalPlannedExpenses: decimal.Zero,
+                })
+
+                // Convert account balance to base currency for the total
+                convertedBalance, convErr := h.convertToBaseCurrency(
+                        account.Balance, currency.Code, baseCurrency.Code, todayStr, rc,
+                )
+                if convErr != nil </span><span class="cov8" title="1">{
+                        if errors.Is(convErr, errNoExchangeRates) </span><span class="cov8" title="1">{
+                                h.logger.Error("exchange rates table is empty, cannot calculate future balance")
+                                return c.JSON(http.StatusInternalServerError, ErrorResponse{Detail: "Exchange rates unavailable"})
+                        }</span>
+                        <span class="cov0" title="0">h.logger.Warn("could not convert account balance to base currency, using raw balance",
+                                "account_id", account.ID, "currency", currency.Code, "error", convErr)
+                        convertedBalance = account.Balance</span>
+                }
+                <span class="cov8" title="1">totalCurrentBalance = totalCurrentBalance.Add(convertedBalance)</span>
+        }
+
+        <span class="cov8" title="1">totalProjectedBalance := totalCurrentBalance.Add(globalPlannedIncome).Sub(globalPlannedExpenses)
+
+        return c.JSON(http.StatusOK, FutureBalanceResponse{
+                TargetDate:            req.TargetDate,
+                BaseCurrencyCode:      baseCurrency.Code,
+                TotalCurrentBalance:   totalCurrentBalance,
+                TotalProjectedBalance: totalProjectedBalance,
+                TotalPlannedIncome:    globalPlannedIncome,
+                TotalPlannedExpenses:  globalPlannedExpenses,
+                IncomeCount:           incomeCount,
+                ExpensesCount:         expensesCount,
+                Accounts:              accountProjections,
+        })</span>
+}
+
+// generateDatePoints generates date points for the projection based on the period type.
+// Python's algorithm:
+//   - Daily: each day from start to end
+//   - Weekly: first point = start_date, then find next Monday, generate end-of-week
+//     (Sunday) dates until end_date, cap last point at end_date
+//   - Monthly: first point = start_date, then find first of next month, generate
+//     end-of-month dates until end_date, cap last point at end_date
+func generateDatePoints(startDate, endDate time.Time, period string) []time.Time <span class="cov8" title="1">{
+        // Normalize dates to start of day (strip time component)
+        start := time.Date(startDate.Year(), startDate.Month(), startDate.Day(), 0, 0, 0, 0, startDate.Location())
+        end := time.Date(endDate.Year(), endDate.Month(), endDate.Day(), 0, 0, 0, 0, endDate.Location())
+
+        var points []time.Time
+
+        switch period </span>{
+        case "weekly":<span class="cov8" title="1">
+                // First point is start_date
+                points = append(points, start)
+
+                // Find the next Monday after start_date
+                daysUntilMonday := (8 - int(start.Weekday())) % 7
+                if daysUntilMonday == 0 </span><span class="cov8" title="1">{
+                        daysUntilMonday = 7
+                }</span>
+                <span class="cov8" title="1">nextMonday := start.AddDate(0, 0, daysUntilMonday)
+
+                // Generate Sunday (end-of-week) dates from that Monday onwards
+                for </span><span class="cov8" title="1">{
+                        sunday := nextMonday.AddDate(0, 0, 6) // Sunday = Monday + 6
+                        if sunday.After(end) </span><span class="cov8" title="1">{
+                                // Cap at end date if we haven't already added it
+                                if !points[len(points)-1].Equal(end) </span><span class="cov8" title="1">{
+                                        points = append(points, end)
+                                }</span>
+                                <span class="cov8" title="1">break</span>
+                        }
+                        <span class="cov8" title="1">points = append(points, sunday)
+                        nextMonday = nextMonday.AddDate(0, 0, 7)</span>
+                }
+
+        case "monthly":<span class="cov8" title="1">
+                // First point is start_date
+                points = append(points, start)
+
+                // Find the first day of the next month
+                firstOfNextMonth := time.Date(start.Year(), start.Month()+1, 1, 0, 0, 0, 0, start.Location())
+
+                // Generate end-of-month dates
+                for </span><span class="cov8" title="1">{
+                        // End of this month = first of next month - 1 day
+                        endOfMonth := firstOfNextMonth.AddDate(0, 0, -1)
+                        if endOfMonth.After(end) </span><span class="cov8" title="1">{
+                                // Cap at end date
+                                if !points[len(points)-1].Equal(end) </span><span class="cov8" title="1">{
+                                        points = append(points, end)
+                                }</span>
+                                <span class="cov8" title="1">break</span>
+                        }
+                        <span class="cov8" title="1">points = append(points, endOfMonth)
+                        // Move to the first of the month after
+                        firstOfNextMonth = firstOfNextMonth.AddDate(0, 1, 0)</span>
+                }
+
+        default:<span class="cov8" title="1"> // daily
+                for current := start; !current.After(end); current = current.AddDate(0, 0, 1) </span><span class="cov8" title="1">{
+                        points = append(points, current)
+                }</span>
+        }
+
+        <span class="cov8" title="1">return points</span>
+}
+
+func (h *Handler) GetBalanceProjection(c echo.Context) error <span class="cov8" title="1">{
+        userID := c.Get("user_id").(int)
+        if err := h.checkUserActive(c, userID); err != nil </span><span class="cov8" title="1">{
+                return nil
+        }</span>
+
+        <span class="cov8" title="1">var req BalanceProjectionRequest
+        if err := c.Bind(&amp;req); err != nil </span><span class="cov8" title="1">{
+                return c.JSON(http.StatusUnprocessableEntity, ErrorResponse{Detail: "Invalid request data"})
+        }</span>
+        <span class="cov8" title="1">if err := c.Validate(&amp;req); err != nil </span><span class="cov8" title="1">{
+                return c.JSON(http.StatusUnprocessableEntity, ErrorResponse{Detail: "Invalid request data"})
+        }</span>
+
+        // Default start date to now if not provided
+        <span class="cov8" title="1">if req.StartDate.IsZero() </span><span class="cov8" title="1">{
+                req.StartDate = time.Now()
+        }</span>
+
+        // Default period to daily
+        <span class="cov8" title="1">if req.Period == "" </span><span class="cov8" title="1">{
+                req.Period = "daily"
+        }</span>
+
+        <span class="cov8" title="1">h.logger.Info("Getting balance projection",
+                "user_id", userID,
+                "start_date", req.StartDate,
+                "end_date", req.EndDate,
+                "period", req.Period,
+        )
+
+        // Get user's base currency
+        user, err := h.userRepo.GetByID(userID)
+        if err != nil </span><span class="cov8" title="1">{
+                h.logger.Error("failed to get user settings", "error", err)
+                return c.JSON(http.StatusInternalServerError, ErrorResponse{Detail: "Error generating balance projection"})
+        }</span>
+
+        <span class="cov8" title="1">baseCurrency, err := h.currencyRepo.GetByID(user.BaseCurrencyID)
+        if err != nil </span><span class="cov8" title="1">{
+                h.logger.Error("failed to get base currency", "error", err)
+                return c.JSON(http.StatusInternalServerError, ErrorResponse{Detail: "Error generating balance projection"})
+        }</span>
+
+        // Get user accounts
+        <span class="cov8" title="1">accountFilters := repositories.AccountFilters{
+                IncludeHidden:   true,
+                IncludeArchived: false,
+        }
+        accounts, err := h.accountRepo.GetByUserID(userID, accountFilters)
+        if err != nil </span><span class="cov8" title="1">{
+                h.logger.Error("failed to get accounts", "error", err)
+                return c.JSON(http.StatusInternalServerError, ErrorResponse{Detail: "Error generating balance projection"})
+        }</span>
+
+        // Filter by account IDs if provided
+        <span class="cov8" title="1">accountIDSet := make(map[int]bool)
+        for _, id := range req.AccountIDs </span><span class="cov8" title="1">{
+                accountIDSet[id] = true
+        }</span>
+
+        // Initialize exchange rate cache for currency conversion
+        <span class="cov8" title="1">rc := newRateCache(h.exchangeRateRepo)
+        todayStr := time.Now().Format("2006-01-02")
+
+        // Calculate current balance, converting to base currency
+        currentBalance := decimal.Zero
+        for _, account := range accounts </span><span class="cov8" title="1">{
+                if len(req.AccountIDs) &gt; 0 &amp;&amp; !accountIDSet[account.ID] </span><span class="cov8" title="1">{
+                        continue</span>
+                }
+
+                <span class="cov8" title="1">currency, currErr := h.currencyRepo.GetByID(account.CurrencyID)
+                if currErr != nil </span><span class="cov8" title="1">{
+                        h.logger.Warn("failed to get currency for account, using raw balance",
+                                "account_id", account.ID, "error", currErr)
+                        currentBalance = currentBalance.Add(account.Balance)
+                        continue</span>
+                }
+
+                <span class="cov8" title="1">convertedBalance, convErr := h.convertToBaseCurrency(
+                        account.Balance, currency.Code, baseCurrency.Code, todayStr, rc,
+                )
+                if convErr != nil </span><span class="cov8" title="1">{
+                        if errors.Is(convErr, errNoExchangeRates) </span><span class="cov8" title="1">{
+                                h.logger.Error("exchange rates table is empty, cannot generate projection")
+                                return c.JSON(http.StatusInternalServerError, ErrorResponse{Detail: "Exchange rates unavailable"})
+                        }</span>
+                        <span class="cov0" title="0">h.logger.Warn("could not convert account balance to base currency, using raw balance",
+                                "account_id", account.ID, "currency", currency.Code, "error", convErr)
+                        currentBalance = currentBalance.Add(account.Balance)
+                        continue</span>
+                }
+                <span class="cov8" title="1">currentBalance = currentBalance.Add(convertedBalance)</span>
+        }
+
+        // Calculate days for projection
+        <span class="cov8" title="1">days := int(req.EndDate.Sub(req.StartDate).Hours() / 24)
+        if days &lt; 0 </span><span class="cov8" title="1">{
+                return c.JSON(http.StatusBadRequest, ErrorResponse{Detail: "End date must be after start date"})
+        }</span>
+
+        // Get planned transactions
+        <span class="cov8" title="1">plannedTxs, err := h.plannedTxRepo.GetUpcomingOccurrences(userID, days, req.IncludeInactive)
+        if err != nil </span><span class="cov8" title="1">{
+                h.logger.Error("failed to get planned transactions", "error", err)
+                return c.JSON(http.StatusInternalServerError, ErrorResponse{Detail: "Error generating balance projection"})
+        }</span>
+
+        // Generate date points using proper calendar-based algorithm
+        <span class="cov8" title="1">datePoints := generateDatePoints(req.StartDate, req.EndDate, req.Period)
+
+        // Generate projection points by iterating over each period
+        var projectionPoints []BalanceProjectionPoint
+        runningBalance := currentBalance
+
+        for i, point := range datePoints </span><span class="cov8" title="1">{
+                // Determine the period boundaries for collecting transactions
+                var periodStart, periodEnd time.Time
+
+                if i == 0 </span><span class="cov8" title="1">{
+                        // First point: period_start = beginning of start_date
+                        periodStart = time.Date(point.Year(), point.Month(), point.Day(), 0, 0, 0, 0, point.Location())
+                }</span> else<span class="cov8" title="1"> {
+                        // Subsequent points: period_start = day after previous point
+                        prev := datePoints[i-1]
+                        periodStart = time.Date(prev.Year(), prev.Month(), prev.Day(), 0, 0, 0, 0, prev.Location()).AddDate(0, 0, 1)
+                }</span>
+                <span class="cov8" title="1">periodEnd = time.Date(point.Year(), point.Month(), point.Day(), 23, 59, 59, 999999999, point.Location())
+
+                // Collect all planned transaction occurrences within this period
+                periodIncome := decimal.Zero
+                periodExpenses := decimal.Zero
+
+                for _, ptx := range plannedTxs </span><span class="cov8" title="1">{
+                        occDate := time.Date(ptx.OccurrenceDate.Year(), ptx.OccurrenceDate.Month(), ptx.OccurrenceDate.Day(),
+                                0, 0, 0, 0, ptx.OccurrenceDate.Location())
+
+                        if (occDate.Equal(periodStart) || occDate.After(periodStart)) &amp;&amp;
+                                (occDate.Equal(periodEnd) || occDate.Before(periodEnd)) </span><span class="cov8" title="1">{
+
+                                // Convert to base currency using the occurrence date
+                                ptxCurrency, currErr := h.currencyRepo.GetByID(ptx.CurrencyID)
+                                if currErr != nil </span><span class="cov0" title="0">{
+                                        h.logger.Warn("failed to get currency for planned tx, skipping",
+                                                "currency_id", ptx.CurrencyID, "error", currErr)
+                                        continue</span>
+                                }
+
+                                <span class="cov8" title="1">dateStr := occDate.Format("2006-01-02")
+                                convertedAmount, convErr := h.convertToBaseCurrency(
+                                        ptx.Amount, ptxCurrency.Code, baseCurrency.Code, dateStr, rc,
+                                )
+                                if convErr != nil </span><span class="cov0" title="0">{
+                                        if errors.Is(convErr, errNoExchangeRates) </span><span class="cov0" title="0">{
+                                                h.logger.Error("exchange rates table is empty, cannot generate projection")
+                                                return c.JSON(http.StatusInternalServerError, ErrorResponse{Detail: "Exchange rates unavailable"})
+                                        }</span>
+                                        <span class="cov0" title="0">h.logger.Warn("skipping planned tx due to missing exchange rate",
+                                                "planned_tx_id", ptx.PlannedTransactionID, "error", convErr)
+                                        continue</span>
+                                }
+
+                                <span class="cov8" title="1">if ptx.IsIncome </span><span class="cov8" title="1">{
+                                        periodIncome = periodIncome.Add(convertedAmount)
+                                }</span> else<span class="cov8" title="1"> {
+                                        periodExpenses = periodExpenses.Add(convertedAmount)
+                                }</span>
+                        }
+                }
+
+                <span class="cov8" title="1">runningBalance = runningBalance.Add(periodIncome).Sub(periodExpenses)
+
+                projectionPoints = append(projectionPoints, BalanceProjectionPoint{
+                        Date:     point,
+                        Balance:  runningBalance,
+                        Income:   periodIncome,
+                        Expenses: periodExpenses,
+                })</span>
+        }
+
+        <span class="cov8" title="1">return c.JSON(http.StatusOK, BalanceProjectionResponse{
+                StartDate:        req.StartDate,
+                EndDate:          req.EndDate,
+                Period:           req.Period,
+                BaseCurrencyCode: baseCurrency.Code,
+                ProjectionPoints: projectionPoints,
+        })</span>
+}
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>

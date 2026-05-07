@@ -1,0 +1,1397 @@
+/* ========================================================================== */
+/*  Global / Shared styles                                                    */
+/* ========================================================================== */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Helvetica,
+    Arial,
+    sans-serif;
+  background: #f0f8ff;
+  color: #000;
+}
+
+/* ========================================================================== */
+/*  Button Enhancements - Modern Bootstrap 5 Extensions                      */
+/* ========================================================================== */
+
+/* --- Global Button Improvements --- */
+.btn {
+  padding: 10px 28px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 500;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  border: none;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Hover effects with elevation */
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Active state - pressed effect */
+.btn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+/* Focus state for accessibility */
+.btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(30, 144, 255, 0.3);
+}
+
+/* Disabled state */
+.btn:disabled,
+.btn.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* --- Primary Button Enhancement --- */
+.btn-primary {
+  background: linear-gradient(135deg, #1e90ff 0%, #0077e6 100%);
+  border: none;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #0077e6 0%, #0066cc 100%);
+  box-shadow: 0 6px 16px rgba(30, 144, 255, 0.4);
+}
+
+/* --- Outline Button Enhancement --- */
+.btn-outline-primary {
+  border: 2px solid #1e90ff;
+  color: #1e90ff;
+  background: transparent;
+  box-shadow: none;
+}
+
+.btn-outline-primary:hover {
+  background: #1e90ff;
+  color: #fff;
+  border-color: #1e90ff;
+  box-shadow: 0 4px 12px rgba(30, 144, 255, 0.3);
+}
+
+/* --- Secondary Button Enhancement --- */
+.btn-secondary {
+  background: #6c757d;
+  box-shadow: 0 2px 4px rgba(108, 117, 125, 0.2);
+}
+
+.btn-secondary:hover {
+  background: #5a6268;
+  box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+}
+
+/* --- Danger Button Enhancement --- */
+.btn-danger:hover {
+  box-shadow: 0 6px 16px rgba(220, 53, 69, 0.4);
+}
+
+/* --- Icon Buttons (special custom class) --- */
+.btn-icon {
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: transparent;
+  color: #1e90ff;
+  box-shadow: none;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.btn-icon i {
+  font-size: 18px;
+}
+
+.btn-icon:hover {
+  background: rgba(30, 144, 255, 0.12);
+  transform: translateY(-1px);
+  box-shadow: none;
+}
+
+.btn-icon:active {
+  transform: scale(0.95);
+}
+
+/* Icon button with outline variant */
+.btn-icon.btn-outline-primary {
+  border: 1px solid #1e90ff;
+  padding: 8px 12px;
+}
+
+.btn-icon.btn-outline-primary:hover {
+  background: #1e90ff;
+  color: #fff;
+  border-color: #1e90ff;
+}
+
+/* --- Button Sizes --- */
+.btn-sm {
+  padding: 6px 18px;
+  font-size: 13px;
+  border-radius: 6px;
+}
+
+.btn-lg {
+  padding: 14px 36px;
+  font-size: 17px;
+  border-radius: 10px;
+}
+
+/* CTA variant (Call to Action) */
+.btn-cta {
+  margin-top: 24px;
+  padding: 14px 36px;
+  font-size: 17px;
+  box-shadow: 0 4px 14px rgba(30, 144, 255, 0.3);
+}
+
+.btn-cta:hover {
+  box-shadow: 0 8px 24px rgba(30, 144, 255, 0.4);
+}
+
+/* ========================================================================== */
+/*  NAVBAR - Unified for all pages                                           */
+/* ========================================================================== */
+:root {
+  --nav-h-desktop: 80px; /* navbar height on desktop */
+  --nav-h-mobile: 68px; /* navbar height on mobile */
+}
+
+/* --- Navbar wrapper --- */
+.navbar, /* used in app (AppShell) */
+.nav {
+  /* legacy Home navbar */
+  height: var(--nav-h-desktop);
+  background: #fff;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  display: flex;
+  align-items: center;
+  z-index: 1;
+  margin: 0;
+  padding: 0;
+}
+
+/* --- Two-row navbar variant --- */
+.navbar.navbar-two-row {
+  height: auto;
+  min-height: var(--nav-h-desktop);
+}
+
+.navbar-two-row .nav-inner {
+  flex-direction: column;
+  padding-block: 8px;
+  gap: 4px;
+}
+
+.navbar-two-row .nav-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.navbar-two-row .nav-row-top {
+  justify-content: space-between;
+}
+
+.navbar-two-row .nav-row-menu {
+  justify-content: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.navbar-two-row .nav-row-menu .btn-icon {
+  padding: 10px 12px;
+}
+
+.navbar-two-row .nav-row-menu .btn-icon i {
+  font-size: 20px;
+}
+
+.navbar-two-row .nav-left,
+.navbar-two-row .nav-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* --- Inner container --- */
+.nav-inner, /* two-tier navbar */
+.nav > .container {
+  /* home page navbar */
+  width: 100%;
+  max-width: 1200px;
+  margin-inline: auto;
+  padding-inline: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 100%;
+}
+
+/* --- Element groups --- */
+.nav-left,
+.nav-right,
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Logo link (image-based) */
+.logo {
+  text-decoration: none;
+  line-height: 1;
+}
+
+.logo-img {
+  display: block;
+  height: 28px; /* default navbar logo height */
+  width: auto;
+}
+
+.env-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #fff;
+  background-color: #e67e22;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 6px;
+}
+
+/* Timer */
+.time {
+  font-size: 17px;
+  color: #6c757d;
+  margin-right: 4px;
+}
+
+/* Icon buttons (legacy - to be replaced) */
+.btn.icon {
+  padding: 8px 18px;
+  border: none;
+  background: transparent;
+  color: #1e90ff;
+  transition: background 0.15s;
+}
+
+.btn.icon i {
+  font-size: 19px;
+}
+
+.btn.icon:hover {
+  background: rgba(30, 144, 255, 0.12);
+  border-radius: 4px;
+}
+
+/* Outline variant (settings gear icon) */
+.btn.icon.outline {
+  border: 1px solid #1e90ff;
+  border-radius: 4px;
+}
+
+.btn.icon.outline:hover {
+  background: #1e90ff;
+  color: #fff;
+}
+
+/* Active router link */
+.router-link-active i {
+  color: #007eeb;
+}
+
+/* Additional spacing between buttons if needed */
+.nav .btn + .btn {
+  margin-left: 12px;
+}
+
+/* --- Responsive --- */
+@media (max-width: 576px) {
+  .navbar,
+  .nav {
+    height: var(--nav-h-mobile);
+  }
+
+  /* Two-row navbar has auto height */
+  .navbar.navbar-two-row {
+    height: auto;
+    min-height: auto;
+  }
+
+  .navbar-two-row .nav-inner {
+    padding-block: 6px;
+    gap: 2px;
+  }
+
+  .navbar-two-row .nav-row-top {
+    padding-bottom: 4px;
+  }
+
+  .navbar-two-row .nav-row-menu {
+    gap: 8px;
+    padding-top: 4px;
+    border-top: 1px solid #f0f0f0;
+  }
+
+  .navbar-two-row .nav-row-menu .btn-icon {
+    padding: 8px 10px;
+  }
+
+  .navbar-two-row .nav-row-menu .btn-icon i {
+    font-size: 18px;
+  }
+
+  /* Reduce base button padding on mobile */
+  .navbar .btn,
+  .nav .btn {
+    padding: 8px 4px;
+  }
+
+  .btn.icon {
+    padding: 6px 12px;
+  }
+
+  .nav-left {
+    gap: 8px;
+  }
+
+  .nav-right {
+    gap: 3px;
+  }
+
+  .nav > .container {
+    padding-inline: 8px;
+  }
+
+  /* slightly smaller logo on mobile */
+  .logo-img {
+    height: 26px;
+  }
+
+  /* Reduce icon button sizes on mobile */
+  .btn-icon {
+    padding: 8px 4px !important;
+  }
+
+  .btn-icon i {
+    font-size: 15px;
+  }
+
+  /* Reduce outline variant icon buttons on mobile */
+  .btn-icon.btn-outline-primary {
+    padding: 8px 4px;
+  }
+
+  /* Reduce timer font size on mobile */
+  .time {
+    font-size: 13px;
+    margin-right: 0;
+  }
+
+  /* Remove Bootstrap margin on subscription badge */
+  .nav-right .me-3 {
+    margin-right: 4px !important;
+  }
+}
+
+/* Extra-narrow phones (e.g., folded screens, 280–360px width) */
+@media (max-width: 360px) {
+  /* tighter horizontal paddings */
+  .nav > .container,
+  .nav-inner {
+    padding-inline: 6px;
+  }
+
+  .nav-left,
+  .nav-right {
+    gap: 2px;
+  }
+
+  /* Two-row navbar adjustments for narrow screens */
+  .navbar-two-row .nav-left,
+  .navbar-two-row .nav-right {
+    gap: 4px;
+  }
+
+  /* make header icon buttons more compact */
+  .btn-icon {
+    padding: 6px 3px !important;
+  }
+
+  .btn-icon i {
+    font-size: 14px;
+  }
+
+  /* shorten subscription badge – keep only the icon */
+  .nav-right .subscription-badge span {
+    display: none !important;
+  }
+
+  .nav-right .subscription-badge {
+    padding: 4px 6px;
+    font-size: 0.8rem;
+    border-radius: 12px;
+  }
+
+  /* smaller timer */
+  .time {
+    font-size: 12px;
+  }
+
+  /* Compact language switcher in header */
+  .navbar-two-row .language-switcher .lang-dropdown-toggle {
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 320px) {
+  /* at extreme widths hide less important items completely */
+  .nav-right .subscription-badge {
+    display: none !important;
+  }
+
+  /* But in two-row navbar we have more space, show subscription badge and timer */
+  .navbar-two-row .nav-right .subscription-badge {
+    display: flex !important;
+  }
+
+  .nav > .container,
+  .nav-inner {
+    padding-inline: 4px;
+  }
+
+  .btn-icon {
+    padding: 6px 2px !important;
+  }
+
+  .btn-icon i {
+    font-size: 13px;
+  }
+
+  /* Compact language switcher for very narrow screens */
+  .navbar-two-row .language-switcher .lang-dropdown-toggle {
+    padding: 3px 6px;
+    font-size: 11px;
+    gap: 3px;
+  }
+
+  .navbar-two-row .language-switcher .lang-dropdown-toggle .fa-chevron-down {
+    display: none;
+  }
+}
+
+@media (max-width: 300px) {
+  .nav-left {
+    gap: 2px;
+  }
+
+  .btn-icon {
+    padding: 5px 2px !important;
+  }
+
+  .btn-icon i {
+    font-size: 12px;
+  }
+}
+
+/* ========================================================================== */
+/*  Login Page                                                                */
+/* ========================================================================== */
+.login-page {
+  position: relative;
+  height: 100dvh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f0f8ff;
+  overflow: hidden;
+}
+
+.login-page .box {
+  width: 700px;
+  display: flex;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.login-page .left {
+  flex: 1 1 55%;
+  padding: 40px 50px;
+  background: #fff;
+  overflow: auto;
+}
+
+.login-page .left h1 {
+  margin: 0 0 4px;
+  font-size: 32px;
+  font-weight: 700;
+}
+
+.login-page .left small {
+  display: block;
+  color: #6c757d;
+  margin-bottom: 24px;
+  font-size: 14px;
+}
+
+.login-page .field {
+  display: flex;
+  margin-bottom: 16px;
+}
+
+.login-page .field span {
+  background: #f1f1f1;
+  padding: 10px 12px;
+  border: 1px solid #ced4da;
+  border-right: 0;
+  border-radius: 4px 0 0 4px;
+  color: #6c757d;
+  font-size: 14px;
+}
+
+.login-page .field input {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid #ced4da;
+  border-left: 0;
+  border-radius: 0 4px 4px 0;
+  font-size: 14px;
+}
+
+.login-page button {
+  background: #1e90ff;
+  color: #fff;
+  padding: 8px 24px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s;
+  border-radius: 4px;
+}
+
+.login-page button:hover {
+  background: #007eeb;
+}
+
+.oauth-container {
+  margin-top: 20px;
+}
+
+.login-page .alert {
+  margin-top: 20px;
+  background: #f8d7da;
+  color: #721c24;
+  padding: 12px;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.login-page .right {
+  flex: 1 1 45%;
+  background: #00bfff;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 40px 30px;
+}
+
+.login-page .right h2 {
+  font-size: 28px;
+  margin-bottom: 15px;
+  font-weight: 700;
+}
+
+.login-page .right p {
+  font-size: 15px;
+  line-height: 1.45;
+  margin-bottom: 30px;
+}
+
+.login-page .right .register-link {
+  background: #1e90ff;
+  color: #fff;
+  padding: 8px 24px;
+  border: none;
+  display: inline-block;
+  text-decoration: none;
+  transition: background 0.2s;
+  border-radius: 4px;
+}
+
+.login-page .right .register-link:hover {
+  background: #007eeb;
+}
+
+@media (max-width: 768px) {
+  .login-page {
+    background: none;
+  }
+
+  .login-page .box {
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    padding-top: 60px;
+  }
+
+  .login-page .left {
+    flex: 1 1 auto;
+    padding: 30px 25px;
+  }
+
+  .login-page .right {
+    flex: 0 0 120px;
+    padding: 20px 25px;
+  }
+
+  .login-page .right p {
+    display: none;
+  }
+
+  .login-page .right h2 {
+    font-size: 20px;
+    margin-bottom: 12px;
+  }
+}
+
+/* ========================================================================== */
+/*  Home Page                                                                 */
+/* ========================================================================== */
+.home-page {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+
+/* Navigation (already unified through .nav) */
+.nav .btn + .btn {
+  margin-left: 12px;
+}
+
+/* ---- Hero ---- */
+.hero {
+  flex: 1 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 60px;
+  padding: 60px 40px;
+}
+
+.hero-content {
+  max-width: 480px;
+}
+
+.hero h1 {
+  font-size: 42px;
+  font-weight: 700;
+  margin: 0 0 20px;
+  line-height: 1.2;
+  color: #000;
+}
+
+.hero p {
+  font-size: 17px;
+  line-height: 1.5;
+  margin: 0 0 25px;
+  color: #444;
+}
+
+/* Безопасные переносы для длинных строк в hero (RU/UK тексты) */
+.home-page .hero h1,
+.home-page .hero p {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  hyphens: auto;
+}
+
+.hero-img img {
+  width: 460px;
+  max-width: 100%;
+  border-radius: 4px;
+}
+
+/* ---- Features ---- */
+.features {
+  padding: 60px 40px;
+  background: #fff;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 30px;
+}
+
+.feature-card {
+  flex: 0 1 300px;
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 30px 25px;
+  text-align: center;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.feature-card .icon {
+  font-size: 34px;
+  color: #1e90ff;
+  margin-bottom: 16px;
+}
+
+.feature-card h3 {
+  font-size: 20px;
+  margin-bottom: 10px;
+  font-weight: 700;
+}
+
+.feature-card p {
+  font-size: 15px;
+  line-height: 1.45;
+  color: #555;
+}
+
+/* ---- Footer ---- */
+.footer {
+  padding: 20px 30px;
+  text-align: center;
+  color: #6c757d;
+  font-size: 14px;
+}
+
+/* ---- Adaptive ---- */
+@media (max-width: 992px) {
+  .hero {
+    flex-direction: column;
+    text-align: center;
+    gap: 40px;
+  }
+
+  .hero-content {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 576px) {
+  .hero {
+    padding: 40px 20px;
+  }
+
+  .hero h1 {
+    font-size: 32px;
+  }
+
+  .btn {
+    padding: 8px 20px;
+  }
+}
+
+/* Дополнительные правки для главной (незалогиненный) на узких экранах */
+@media (max-width: 768px) {
+  /* Герой в колонку и более компактные отступы */
+  .home-page .hero {
+    gap: 32px;
+    padding: 48px 24px;
+    text-align: center;
+  }
+
+  /* Сетка фич 3→2 колонки */
+  .home-page .features {
+    padding: 48px 24px;
+  }
+
+  .home-page .feature-card {
+    flex: 1 1 calc(50% - 16px);
+  }
+}
+
+@media (max-width: 480px) {
+  /* Сетка фич 2→1 колонка, чуть компактнее карточки */
+  .home-page .features {
+    padding: 24px 16px;
+    gap: 16px;
+  }
+
+  .home-page .feature-card {
+    flex: 1 1 100%;
+    padding: 20px;
+  }
+
+  .home-page .feature-card .icon {
+    font-size: 28px;
+    margin-bottom: 12px;
+  }
+
+  .home-page .feature-card h3 {
+    font-size: 18px;
+    margin-bottom: 8px;
+  }
+
+  .home-page .feature-card p {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 440px) {
+  /* Samsung Fold outer screen and similar narrow devices */
+  .home-page .nav > .container {
+    padding-inline: 8px;
+  }
+
+  .home-page .nav-right {
+    gap: 6px;
+  }
+
+  .home-page .nav .btn {
+    padding: 6px 3px;
+    font-size: 12px;
+  }
+
+  .home-page .nav .btn + .btn {
+    margin-left: 0;
+  }
+
+  .home-page .logo-img {
+    height: 20px;
+  }
+
+  /* Более компактная типографика hero */
+  .home-page .hero {
+    padding: 36px 16px;
+    gap: 24px;
+  }
+
+  .home-page .hero h1 {
+    font-size: 28px;
+    line-height: 1.22;
+  }
+
+  .home-page .hero p {
+    font-size: 15px;
+  }
+
+  .home-page .hero .btn-cta {
+    padding: 12px 20px;
+  }
+}
+
+@media (max-width: 360px) {
+  /* Ещё компактнее шапка home */
+  .home-page .nav > .container {
+    padding-inline: 8px;
+  }
+
+  .home-page .nav-right {
+    gap: 6px;
+  }
+
+  .home-page .nav .btn {
+    padding: 6px 10px;
+    font-size: 13px;
+  }
+
+  .home-page .logo-img {
+    height: 22px;
+  }
+
+  /* CTA на всю ширину, уменьшение шрифтов */
+  .home-page .hero h1 {
+    font-size: 26px;
+  }
+
+  .home-page .hero p {
+    font-size: 14px;
+  }
+
+  .home-page .hero .btn-cta {
+    width: 100%;
+  }
+
+  .home-page .hero-img img {
+    width: 100%;
+    max-width: 320px;
+    height: auto;
+  }
+
+  .home-page .feature-card {
+    padding: 16px;
+  }
+
+  .home-page .feature-card h3 {
+    font-size: 16px;
+  }
+
+  .home-page .feature-card .icon {
+    font-size: 24px;
+  }
+
+  .home-page .footer {
+    padding: 16px 12px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 320px) {
+  /* Разрешаем перенос шапки главной на 2 строки, ещё рычаги компактности */
+  .home-page .nav > .container {
+    padding-inline: 6px;
+    flex-wrap: wrap;
+    row-gap: 4px;
+    height: auto;
+  }
+
+  .home-page .nav-right {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .home-page .nav .btn {
+    padding: 6px 8px;
+    font-size: 12.5px;
+  }
+
+  .home-page .hero {
+    padding: 28px 12px;
+    gap: 18px;
+  }
+
+  .home-page .hero h1 {
+    font-size: 24px;
+  }
+
+  .home-page .hero p {
+    font-size: 13.5px;
+  }
+}
+
+@media (max-width: 280px) {
+  /* Samsung Fold outer screen and similar very narrow devices */
+  .home-page .nav > .container {
+    padding-inline: 4px;
+  }
+
+  .home-page .nav-right {
+    gap: 4px;
+  }
+
+  .home-page .nav .btn {
+    padding: 5px 6px;
+    font-size: 11px;
+  }
+
+  .home-page .logo-img {
+    height: 18px;
+  }
+}
+
+/* ========================================================================== */
+/*  Accounts Page                                                             */
+/* ========================================================================== */
+.accounts-page {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--c-bg-main);
+}
+
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin-inline: auto;
+  padding-inline: 24px;
+}
+
+.accounts-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  margin-block: 24px;
+}
+
+.accounts-toolbar .actions {
+  margin-left: auto;
+  display: flex;
+  gap: 12px;
+}
+
+.btn.toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  color: var(--c-accent);
+  border: 1px solid var(--c-accent);
+  transition: background 0.2s;
+}
+
+.btn.toggle:hover,
+.btn.toggle.checked {
+  background: var(--c-accent);
+  color: #fff;
+}
+
+.btn.icon {
+  padding: 6px 12px;
+}
+
+.btn.icon img {
+  width: 20px;
+  height: 20px;
+}
+
+.panel {
+  padding: 20px;
+  background: var(--c-bg-card);
+  border-radius: 4px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  margin-bottom: 24px;
+}
+
+@media (max-width: 576px) {
+  .accounts-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .accounts-toolbar .actions {
+    margin-left: 0;
+  }
+}
+
+/* ========================================================================== */
+/*  App-header (two-tier version where needed)                               */
+/* ========================================================================== */
+.app-header {
+  background: #fff;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  margin-bottom: 32px;
+}
+
+.app-header .bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 0;
+}
+
+.main-menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 12px 0 18px;
+}
+
+@media (max-width: 576px) {
+  .main-menu {
+    justify-content: space-between;
+  }
+}
+
+/* ========================================================================== */
+/*  Utilities / Transitions                                                   */
+/* ========================================================================== */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.25s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* --------------------------------------------------
+   Settings Page (split-layout)
+-------------------------------------------------- */
+.settings-page,
+.reports-page {
+  /* Reduced bottom padding to 24px instead of 60px */
+  min-height: calc(100dvh - var(--nav-h-desktop));
+  padding-block: 40px 24px; /* top 40, bottom 24 */
+}
+
+@media (max-width: 576px) {
+  .settings-page,
+  .reports-page {
+    min-height: calc(100dvh - var(--nav-h-mobile));
+    padding-block: 24px 16px; /* more compact on mobile */
+  }
+}
+
+/* Remove bottom margin from last section card */
+.section-card:last-child {
+  margin-bottom: 0;
+}
+
+.split {
+  display: flex;
+  gap: 32px;
+}
+
+/* ---------- SIDEBAR ---------- */
+.sidebar {
+  flex: 0 0 220px;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar .title {
+  margin: 0 0 24px;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.side-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.side-btn {
+  justify-content: flex-start;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  padding: 12px 18px;
+  background: transparent;
+  border: 2px solid #e5e7eb;
+  color: #1e90ff;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: none;
+}
+
+.side-btn i {
+  font-size: 18px;
+}
+
+.side-btn:hover {
+  background: rgba(30, 144, 255, 0.08);
+  border-color: #1e90ff;
+  transform: translateX(4px);
+  box-shadow: 0 2px 8px rgba(30, 144, 255, 0.15);
+}
+
+.side-btn.active,
+.side-btn.active:hover {
+  background: linear-gradient(135deg, #1e90ff 0%, #0077e6 100%);
+  color: #fff;
+  border-color: #1e90ff;
+  transform: translateX(0);
+  box-shadow: 0 4px 12px rgba(30, 144, 255, 0.3);
+}
+
+/* ---------- CONTENT ---------- */
+.settings-content {
+  flex: 1 1 auto;
+  background: var(--c-bg-card, #fff);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  padding: 28px 24px;
+  overflow: auto;
+}
+
+/* ---------- MOBILE ---------- */
+@media (max-width: 768px) {
+  .split {
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .sidebar {
+    flex: 0 0 auto;
+  }
+
+  .sidebar .title {
+    margin-bottom: 16px;
+    font-size: 18px;
+  }
+
+  .side-nav {
+    flex-direction: row;
+    gap: 8px;
+  }
+
+  .side-btn {
+    width: auto;
+    padding: 12px;
+    justify-content: center;
+  }
+
+  .side-btn span {
+    display: none;
+  }
+
+  .side-btn i {
+    font-size: 20px;
+    margin: 0;
+  }
+
+  .settings-content {
+    padding: 20px 18px;
+  }
+}
+
+/* --------------------------------------------------
+   Settings → section-card (Profile, Language, Currency)
+-------------------------------------------------- */
+.section-card {
+  background: var(--c-bg-card, #fff);
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 24px 20px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+}
+
+.section-card h3 {
+  margin: 0 0 16px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.section-card .btn {
+  align-self: flex-start;
+}
+
+.side-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px; /* spacing between icon and text */
+}
+
+/* --------------------------------------------------
+   Cat-UI (categories list)
+-------------------------------------------------- */
+.cat-card {
+  overflow: auto;
+}
+
+.cat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.cat-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.cat-group h4 {
+  margin: 0 0 12px;
+  font-size: 17px;
+  color: #007eeb;
+}
+
+.cat-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.cat-item {
+  margin-bottom: 8px;
+}
+
+.cat-btn {
+  padding: 8px 18px;
+  background: #eaf4ff;
+  color: #1e90ff;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.25s ease;
+  box-shadow: 0 1px 3px rgba(30, 144, 255, 0.1);
+}
+
+.cat-btn:hover {
+  background: #d6eaff;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(30, 144, 255, 0.2);
+  border-color: #1e90ff;
+}
+
+.cat-sub {
+  list-style: none;
+  margin: 6px 0 0 16px;
+  padding: 0;
+}
+
+.cat-btn.sub {
+  font-size: 13px;
+  background: #f5f9ff;
+  padding: 6px 14px;
+}
+
+/* Unified class for all dropdowns/selects */
+.select-input {
+  width: 100%;
+  padding: 10px 32px 10px 12px; /* 32px = icon (12) + safe spacing (20) */
+  font-size: 14px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  background-color: #fff;
+
+  /* Remove native arrow */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+
+  /* Custom SVG arrow in #6c757d color */
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='%236c757d' d='M5 7l5 5 5-5'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-size: 12px 12px;
+  background-position: right 12px center;
+}
+
+select::-ms-expand {
+  display: none;
+}
+
+/* Edge/IE */
+
+.confirm-modal .modal-container,
+.confirm-modal .modal-window {
+  /* alternative selector for different markup */
+  max-width: 380px; /* more compact than regular modal */
+}
